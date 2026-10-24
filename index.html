@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101522">
+  <title>FoldLamp · 灯光控制</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101522;
+      --panel: #1a2232;
+      --panel-soft: #202a3d;
+      --text: #f4f1e8;
+      --muted: #a7afc0;
+      --accent: #f7c96b;
+      --accent-2: #ffdf9a;
+      --green: #74d6a3;
+      --red: #ff8b83;
+      --line: rgba(255,255,255,.09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: max(22px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+      background: radial-gradient(ellipse at 50% -15%, #37415a 0, var(--bg) 55%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { width: min(100%, 480px); margin: 0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 6px 2px 24px; }
+    .brand { display:flex; align-items:center; gap:11px; }
+    .brand-mark { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; background:rgba(247,201,107,.14); color:var(--accent); font-size:21px; }
+    h1 { margin:0; font-size:18px; letter-spacing:.02em; }
+    .subtitle { margin-top:3px; color:var(--muted); font-size:12px; }
+    .connection { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; white-space:nowrap; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#788196; box-shadow:0 0 0 4px rgba(120,129,150,.12); }
+    .dot.connected { background:var(--green); box-shadow:0 0 0 4px rgba(116,214,163,.13); }
+    .card { background:linear-gradient(145deg, rgba(32,42,61,.96), rgba(24,32,47,.96)); border:1px solid var(--line); border-radius:24px; padding:22px; box-shadow:0 18px 50px rgba(0,0,0,.22); }
+    .hero { min-height:250px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+    .glow { position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(247,201,107,.12); filter:blur(35px); transition:opacity .3s; opacity:.15; }
+    .lamp { position:relative; width:118px; height:142px; margin:4px 0 13px; }
+    .shade { position:absolute; top:8px; left:15px; width:88px; height:66px; background:linear-gradient(145deg,#fff1c8,#e7b85e); clip-path:polygon(20% 0,80% 0,100% 100%,0 100%); border-radius:10px 10px 22px 22px; box-shadow:0 0 38px rgba(247,201,107,.28); transition:filter .25s, opacity .25s; }
+    .stem { position:absolute; top:74px; left:56px; width:7px; height:49px; border-radius:5px; background:linear-gradient(90deg,#78849a,#d4d9df,#707b90); }
+    .base { position:absolute; bottom:5px; left:28px; width:63px; height:12px; border-radius:50%; background:linear-gradient(#dce0e5,#68748a); }
+    .lamp.off .shade { opacity:.35; filter:saturate(.3); box-shadow:none; }
+    .lamp.off .glow { opacity:0; }
+    .lamp.on .glow { opacity:1; }
+    .hero-status { position:relative; font-size:13px; color:var(--muted); }
+    .hero-status strong { color:var(--text); font-weight:600; }
+    .connect-row { display:flex; gap:10px; margin-top:14px; }
+    button { font:inherit; color:inherit; cursor:pointer; border:0; transition:transform .12s, opacity .2s, background .2s; }
+    button:active { transform:scale(.98); }
+    button:disabled { opacity:.42; cursor:not-allowed; }
+    .primary { width:100%; min-height:52px; border-radius:16px; background:var(--accent); color:#22202a; font-weight:750; font-size:15px; }
+    .primary:hover:not(:disabled) { background:var(--accent-2); }
+    .secondary { min-height:50px; padding:0 17px; border-radius:15px; background:var(--panel-soft); border:1px solid var(--line); font-weight:650; }
+    .secondary.active { color:#24202a; background:var(--accent); border-color:transparent; }
+    .controls { margin-top:14px; }
+    .section-title { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:17px; }
+    .section-title h2 { margin:0; font-size:15px; }
+    .value { color:var(--accent); font-size:14px; font-variant-numeric:tabular-nums; }
+    input[type="range"] { display:block; width:100%; margin:8px 0 7px; accent-color:var(--accent); height:7px; }
+    .range-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; }
+    .mode-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:17px; }
+    .mode-button { min-height:54px; border:1px solid var(--line); border-radius:16px; background:var(--panel-soft); font-weight:650; }
+    .mode-button.active { background:rgba(247,201,107,.15); color:var(--accent-2); border-color:rgba(247,201,107,.38); }
+    .info { margin-top:14px; padding:14px 16px; border-radius:16px; color:var(--muted); background:rgba(255,255,255,.035); font-size:12px; line-height:1.55; }
+    .info strong { color:var(--text); font-weight:600; }
+    .message { min-height:19px; margin:12px 4px 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .message.error { color:var(--red); }
+    .message.success { color:var(--green); }
+    footer { margin:18px 4px 0; text-align:center; color:#7f899c; font-size:11px; }
+    @media (max-width:360px) { .card { padding:18px; } .connection { font-size:11px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div><h1>FoldLamp</h1><div class="subtitle">折叠灯 · BLE 控制</div></div>
+      </div>
+      <div class="connection"><span class="dot" id="connectionDot"></span><span id="connectionText">未连接</span></div>
+    </header>
+
+    <section class="card hero" aria-label="灯具状态">
+      <div class="glow"></div>
+      <div class="lamp off" id="lampIllustration" aria-hidden="true">
+        <div class="shade"></div><div class="stem"></div><div class="base"></div>
+      </div>
+      <div class="hero-status"><strong id="powerLabel">状态未知</strong><span id="modeLabel"> · 等待连接</span></div>
+    </section>
+
+    <div class="connect-row">
+      <button class="primary" id="connectButton">连接灯具</button>
+    </div>
+
+    <section class="card controls">
+      <div class="section-title"><h2>亮度</h2><span class="value"><span id="brightnessValue">—</span></span></div>
+      <input id="brightnessSlider" type="range" min="10" max="255" step="1" value="180" disabled aria-label="灯光亮度">
+      <div class="range-labels"><span>柔和 · 10</span><span>明亮 · 255</span></div>
+      <div class="mode-row">
+        <button class="mode-button" id="powerButton" disabled>打开灯</button>
+        <button class="mode-button" id="nightButton" disabled>☾ 夜间模式</button>
+      </div>
+    </section>
+
+    <div class="info">
+      <strong>连接提示</strong><br>
+      请先在灯具附近连接设备。网页通过 BLE 直接控制灯具；亮度滑块在松手时发送设置。
+    </div>
+    <div class="message" id="message" role="status" aria-live="polite">等待连接灯具。</div>
+    <footer>FoldLamp · 本地 BLE 控制</footer>
+  </main>
+
+  <script>
+    const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    const RX_UUID      = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    const TX_UUID      = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+    const connectButton = document.getElementById("connectButton");
+    const powerButton = document.getElementById("powerButton");
+    const nightButton = document.getElementById("nightButton");
+    const brightnessSlider = document.getElementById("brightnessSlider");
+    const brightnessValue = document.getElementById("brightnessValue");
+    const message = document.getElementById("message");
+    const connectionText = document.getElementById("connectionText");
+    const connectionDot = document.getElementById("connectionDot");
+    const powerLabel = document.getElementById("powerLabel");
+    const modeLabel = document.getElementById("modeLabel");
+    const lampIllustration = document.getElementById("lampIllustration");
+
+    let device = null;
+    let server = null;
+    let rxCharacteristic = null;
+    let txCharacteristic = null;
+    let lampState = { on: null, brightness: null, night: false };
+    let writeQueue = Promise.resolve();
+
+    function setMessage(text, kind = "") {
+      message.textContent = text;
+      message.className = `message ${kind}`;
+    }
+
+    function setConnected(connected) {
+      connectionText.textContent = connected ? "已连接" : "未连接";
+      connectionDot.classList.toggle("connected", connected);
+      connectButton.textContent = connected ? "断开连接" : "连接灯具";
+      powerButton.disabled = !connected || lampState.on === null;
+      nightButton.disabled = !connected || lampState.on === null;
+      brightnessSlider.disabled = !connected || lampState.on !== true;
+    }
+
+    function renderState() {
+      if (lampState.on === null) {
+        powerLabel.textContent = "状态未知";
+        modeLabel.textContent = " · 等待设备状态";
+        powerButton.textContent = "打开灯";
+        lampIllustration.classList.add("off");
+        lampIllustration.classList.remove("on");
+        setConnected(Boolean(server && server.connected));
+        return;
+      }
+
+      powerLabel.textContent = lampState.on ? "灯已打开" : "灯已关闭";
+      modeLabel.textContent = lampState.night ? " · 夜间模式" : " · 正常模式";
+      powerButton.textContent = lampState.on ? "关闭灯" : "打开灯";
+      nightButton.classList.toggle("active", lampState.night);
+      lampIllustration.classList.toggle("on", lampState.on);
+      lampIllustration.classList.toggle("off", !lampState.on);
+
+      if (lampState.brightness !== null) {
+        brightnessSlider.value = String(lampState.brightness);
+        brightnessValue.textContent = `${lampState.brightness} / 255`;
+      }
+
+      setConnected(Boolean(server && server.connected));
+    }
+
+    function parseStatus(text) {
+      const fields = Object.fromEntries(
+        text.split(";").map(part => {
+          const index = part.indexOf("=");
+          return index < 0 ? [part, ""] : [part.slice(0, index), part.slice(index + 1)];
+        })
+      );
+
+      if (fields.STATE === "ON" || fields.STATE === "OFF") {
+        lampState.on = fields.STATE === "ON";
+      }
+      if (fields.BRIGHTNESS !== undefined) {
+        const value = Number(fields.BRIGHTNESS);
+        if (Number.isFinite(value)) lampState.brightness = value;
+      }
+      if (fields.NIGHT !== undefined) {
+        lampState.night = fields.NIGHT === "1";
+      }
+
+      renderState();
+    }
+
+    function handleValue(event) {
+      const text = new TextDecoder().decode(event.target.value).trim();
+      if (!text) return;
+      if (text.startsWith("STATE=")) {
+        parseStatus(text);
+        setMessage("灯具状态已同步。", "success");
+      } else if (text.startsWith("ERR:")) {
+        setMessage(`灯具返回：${text}`, "error");
+      } else {
+        setMessage(`灯具返回：${text}`, "success");
+      }
+    }
+
+    async function connectLamp() {
+      if (!navigator.bluetooth) {
+        setMessage("此浏览器没有 Web Bluetooth。请用支持 BLE 网页连接的浏览器，或告诉我手机系统。", "error");
+        return;
+      }
+
+      try {
+        connectButton.disabled = true;
+        setMessage("正在搜索 FoldLamp-C3…");
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: "FoldLamp-C3" }],
+          optionalServices: [SERVICE_UUID]
+        });
+        device.addEventListener("gattserverdisconnected", onDisconnected);
+
+        setMessage("正在连接并读取灯具服务…");
+        server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        rxCharacteristic = await service.getCharacteristic(RX_UUID);
+        txCharacteristic = await service.getCharacteristic(TX_UUID);
+
+        txCharacteristic.addEventListener("characteristicvaluechanged", handleValue);
+        await txCharacteristic.startNotifications();
+
+        setConnected(true);
+        setMessage("已连接。正在同步灯具状态…", "success");
+
+        // TX is readable, so this also recovers the state if the first
+        // connection notification arrived before subscription completed.
+        try {
+          const value = await txCharacteristic.readValue();
+          handleValue({ target: { value } });
+        } catch (_) {
+          // Notifications may still provide the state.
+        }
+      } catch (error) {
+        if (error.name !== "NotFoundError") {
+          setMessage(`连接失败：${error.message || error}`, "error");
+        } else {
+          setMessage("已取消设备选择。", "");
+        }
+        if (device && device.gatt && !device.gatt.connected) setConnected(false);
+      } finally {
+        connectButton.disabled = false;
+      }
+    }
+
+    function onDisconnected() {
+      server = null;
+      rxCharacteristic = null;
+      txCharacteristic = null;
+      lampState = { on: null, brightness: null, night: false };
+      renderState();
+      setMessage("连接已断开。重新连接后可继续控制。", "error");
+    }
+
+    function sendCommand(command) {
+      if (!rxCharacteristic || !server || !server.connected) {
+        setMessage("请先连接灯具。", "error");
+        return Promise.resolve();
+      }
+
+      writeQueue = writeQueue.then(async () => {
+        const data = new TextEncoder().encode(command);
+        if (rxCharacteristic.writeValueWithResponse) {
+          await rxCharacteristic.writeValueWithResponse(data);
+        } else {
+          await rxCharacteristic.writeValue(data);
+        }
+        setMessage(`已发送：${command}，等待灯具状态回报…`, "success");
+      }).catch(error => {
+        setMessage(`发送失败：${error.message || error}`, "error");
+      });
+
+      return writeQueue;
+    }
+
+    connectButton.addEventListener("click", async () => {
+      if (server && server.connected) {
+        device.gatt.disconnect();
+      } else {
+        await connectLamp();
+      }
+    });
+
+    powerButton.addEventListener("click", () => {
+      sendCommand(lampState.on ? "OFF" : "ON");
+    });
+
+    nightButton.addEventListener("click", () => {
+      sendCommand(lampState.night ? "NIGHT_OFF" : "NIGHT_ON");
+    });
+
+    brightnessSlider.addEventListener("input", () => {
+      brightnessValue.textContent = `${brightnessSlider.value} / 255`;
+    });
+
+    brightnessSlider.addEventListener("change", () => {
+      if (lampState.on !== true) {
+        setMessage("请先打开灯，再调整亮度。", "error");
+        return;
+      }
+      sendCommand(`BRIGHTNESS=${brightnessSlider.value}`);
+    });
+
+    setConnected(false);
+  </script>
+</body>
+</html>
