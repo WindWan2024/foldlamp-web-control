@@ -1,77 +1,86 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101522">
-  <title>FoldLamp · 灯光控制</title>
+  <meta name="theme-color" content="#37332e">
+  <title>Free Slope Lamp · Light Control</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #101522;
-      --panel: #1a2232;
-      --panel-soft: #202a3d;
-      --text: #f4f1e8;
-      --muted: #a7afc0;
-      --accent: #f7c96b;
-      --accent-2: #ffdf9a;
-      --green: #74d6a3;
-      --red: #ff8b83;
-      --line: rgba(255,255,255,.09);
+      --bg: #37332e;
+      --panel: rgba(37,33,29,.28);
+      --panel-soft: rgba(25,22,20,.24);
+      --text: #f4eee5;
+      --muted: #aaa198;
+      --accent: #e8b879;
+      --accent-2: #f5d5a5;
+      --green: #8bc49b;
+      --red: #df8d7e;
+      --line: rgba(246,232,215,.10);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      padding: max(22px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
-      background: radial-gradient(ellipse at 50% -15%, #37415a 0, var(--bg) 55%);
+      padding: max(24px, env(safe-area-inset-top)) 18px max(30px, env(safe-area-inset-bottom));
+      position:relative;
+      isolation:isolate;
+      overflow-x:hidden;
+      background:var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .app { width: min(100%, 480px); margin: 0 auto; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 6px 2px 24px; }
+    body::before, body::after { content:""; position:fixed; z-index:0; inset:-44px; pointer-events:none; background-size:cover; background-position:center 42%; filter:blur(46px) brightness(.72) saturate(.72); transform:scale(1.1); transition:opacity .7s ease; }
+    body::before { background-image:url("assets/lamp-off.jpg"); opacity:1; }
+    body::after { background-image:url("assets/lamp-on.jpg"); opacity:0; }
+    body.lamp-on::before { opacity:0; }
+    body.lamp-on::after { opacity:1; }
+    .app { position:relative; z-index:1; width: min(100%, 460px); margin: 0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 6px 3px 20px; }
     .brand { display:flex; align-items:center; gap:11px; }
-    .brand-mark { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; background:rgba(247,201,107,.14); color:var(--accent); font-size:21px; }
-    h1 { margin:0; font-size:18px; letter-spacing:.02em; }
-    .subtitle { margin-top:3px; color:var(--muted); font-size:12px; }
-    .connection { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; white-space:nowrap; }
-    .dot { width:8px; height:8px; border-radius:50%; background:#788196; box-shadow:0 0 0 4px rgba(120,129,150,.12); }
-    .dot.connected { background:var(--green); box-shadow:0 0 0 4px rgba(116,214,163,.13); }
-    .card { background:linear-gradient(145deg, rgba(32,42,61,.96), rgba(24,32,47,.96)); border:1px solid var(--line); border-radius:24px; padding:22px; box-shadow:0 18px 50px rgba(0,0,0,.22); }
-    .hero { min-height:250px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; }
-    .glow { position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(247,201,107,.12); filter:blur(35px); transition:opacity .3s; opacity:.15; }
-    .lamp { position:relative; width:118px; height:142px; margin:4px 0 13px; }
-    .shade { position:absolute; top:8px; left:15px; width:88px; height:66px; background:linear-gradient(145deg,#fff1c8,#e7b85e); clip-path:polygon(20% 0,80% 0,100% 100%,0 100%); border-radius:10px 10px 22px 22px; box-shadow:0 0 38px rgba(247,201,107,.28); transition:filter .25s, opacity .25s; }
-    .stem { position:absolute; top:74px; left:56px; width:7px; height:49px; border-radius:5px; background:linear-gradient(90deg,#78849a,#d4d9df,#707b90); }
-    .base { position:absolute; bottom:5px; left:28px; width:63px; height:12px; border-radius:50%; background:linear-gradient(#dce0e5,#68748a); }
-    .lamp.off .shade { opacity:.35; filter:saturate(.3); box-shadow:none; }
-    .lamp.off .glow { opacity:0; }
-    .lamp.on .glow { opacity:1; }
-    .hero-status { position:relative; font-size:13px; color:var(--muted); }
-    .hero-status strong { color:var(--text); font-weight:600; }
-    .connect-row { display:flex; gap:10px; margin-top:14px; }
+    .brand-mark { width:40px; height:40px; display:grid; place-items:center; border-radius:13px; background:rgba(235,218,196,.08); border:1px solid rgba(246,232,215,.10); color:var(--accent); font-size:19px; }
+    h1 { margin:0; font-size:17px; font-weight:650; letter-spacing:.11em; }
+    .subtitle { margin-top:4px; color:var(--muted); font-size:11px; letter-spacing:.06em; }
+    .connection { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:11px; white-space:nowrap; padding:8px 11px; border-radius:99px; background:rgba(28,25,22,.20); border:1px solid rgba(246,232,215,.09); backdrop-filter:blur(14px); }
+    .dot { width:7px; height:7px; border-radius:50%; background:#837b72; box-shadow:0 0 0 4px rgba(131,123,114,.12); }
+    .dot.connected { background:var(--green); box-shadow:0 0 0 4px rgba(139,196,155,.12); }
+    .card { background:linear-gradient(145deg,rgba(51,45,39,.25),rgba(25,22,19,.20)); border:1px solid rgba(246,232,215,.07); border-radius:25px; padding:22px; box-shadow:0 16px 40px rgba(0,0,0,.10); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+    .hero { min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; position:relative; overflow:hidden; isolation:isolate; padding:0; background:#38332e; }
+    .render-stage { position:absolute; inset:0; overflow:hidden; background:#49443f; }
+    .render-stage img { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity .45s ease, transform 1.2s ease; }
+    .render-stage .render-off { opacity:1; }
+    .render-stage .render-on { opacity:0; }
+    .render-stage.on .render-off { opacity:0; }
+    .render-stage.on .render-on { opacity:1; }
+    .render-stage.on img { transform:scale(1.015); }
+    .render-stage::after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(0deg,rgba(15,13,12,.78),rgba(15,13,12,.12) 56%,transparent); pointer-events:none; }
+    .hero-status { position:relative; z-index:1; align-self:stretch; margin-top:auto; padding:46px 22px 18px; font-size:12px; color:#e4d9cc; letter-spacing:.04em; }
+    .hero-status strong { color:var(--text); font-weight:650; font-size:15px; letter-spacing:.04em; }
+    .connect-row { display:flex; gap:10px; margin-top:13px; }
     button { font:inherit; color:inherit; cursor:pointer; border:0; transition:transform .12s, opacity .2s, background .2s; }
     button:active { transform:scale(.98); }
     button:disabled { opacity:.42; cursor:not-allowed; }
-    .primary { width:100%; min-height:52px; border-radius:16px; background:var(--accent); color:#22202a; font-weight:750; font-size:15px; }
-    .primary:hover:not(:disabled) { background:var(--accent-2); }
+    .primary { width:100%; min-height:54px; border-radius:16px; background:rgba(42,38,34,.38); border:1px solid rgba(246,232,215,.15); color:#f0e4d6; font-weight:650; font-size:14px; letter-spacing:.04em; box-shadow:0 8px 26px rgba(20,16,12,.08); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+    .primary:hover:not(:disabled) { background:rgba(62,55,48,.52); }
     .secondary { min-height:50px; padding:0 17px; border-radius:15px; background:var(--panel-soft); border:1px solid var(--line); font-weight:650; }
     .secondary.active { color:#24202a; background:var(--accent); border-color:transparent; }
-    .controls { margin-top:14px; }
-    .section-title { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:17px; }
-    .section-title h2 { margin:0; font-size:15px; }
-    .value { color:var(--accent); font-size:14px; font-variant-numeric:tabular-nums; }
+    .controls { margin-top:13px; }
+    .section-title { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; }
+    .section-title h2 { margin:0; font-size:14px; font-weight:650; letter-spacing:.04em; }
+    .value { color:var(--accent-2); font-size:13px; font-variant-numeric:tabular-nums; }
     input[type="range"] { display:block; width:100%; margin:8px 0 7px; accent-color:var(--accent); height:7px; }
-    .range-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; }
-    .mode-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:17px; }
-    .mode-button { min-height:54px; border:1px solid var(--line); border-radius:16px; background:var(--panel-soft); font-weight:650; }
-    .mode-button.active { background:rgba(247,201,107,.15); color:var(--accent-2); border-color:rgba(247,201,107,.38); }
-    .info { margin-top:14px; padding:14px 16px; border-radius:16px; color:var(--muted); background:rgba(255,255,255,.035); font-size:12px; line-height:1.55; }
+    .range-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:10px; letter-spacing:.02em; }
+    .mode-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:19px; }
+    .mode-button { min-height:52px; border:1px solid rgba(246,232,215,.11); border-radius:15px; background:rgba(28,25,22,.24); color:#e4d9cc; font-size:12px; font-weight:650; letter-spacing:.02em; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+    .mode-button.active { background:rgba(211,177,137,.25); color:#f7e4c9; border-color:rgba(246,219,184,.24); }
+    .info { margin-top:13px; padding:14px 16px; border-radius:16px; color:#c5b9aa; background:rgba(26,23,20,.20); border:1px solid rgba(246,232,215,.06); font-size:11px; line-height:1.65; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
     .info strong { color:var(--text); font-weight:600; }
-    .message { min-height:19px; margin:12px 4px 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .message { min-height:19px; margin:11px 4px 0; color:var(--muted); font-size:11px; line-height:1.5; }
     .message.error { color:var(--red); }
     .message.success { color:var(--green); }
-    footer { margin:18px 4px 0; text-align:center; color:#7f899c; font-size:11px; }
+    footer { margin:20px 4px 0; text-align:center; color:#82776c; font-size:10px; letter-spacing:.08em; }
+    @media (min-width:700px) { body { padding-top:48px; } .app { width:min(100%,520px); } .hero { min-height:340px; } }
     @media (max-width:360px) { .card { padding:18px; } .connection { font-size:11px; } }
   </style>
 </head>
@@ -80,39 +89,39 @@
     <header>
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">✦</div>
-        <div><h1>FoldLamp</h1><div class="subtitle">折叠灯 · BLE 控制</div></div>
+        <div><h1>Free Slope Lamp</h1><div class="subtitle">FOLDABLE LAMP · BLE CONTROL</div></div>
       </div>
-      <div class="connection"><span class="dot" id="connectionDot"></span><span id="connectionText">未连接</span></div>
+      <div class="connection"><span class="dot" id="connectionDot"></span><span id="connectionText">Disconnected</span></div>
     </header>
 
-    <section class="card hero" aria-label="灯具状态">
-      <div class="glow"></div>
-      <div class="lamp off" id="lampIllustration" aria-hidden="true">
-        <div class="shade"></div><div class="stem"></div><div class="base"></div>
+    <section class="card hero" aria-label="Lamp status">
+      <div class="render-stage off" id="lampIllustration" aria-hidden="true">
+        <img class="render-off" src="assets/lamp-off.jpg" alt="Foldable lamp turned off" fetchpriority="high" decoding="async">
+        <img class="render-on" src="assets/lamp-on.jpg" alt="Foldable lamp turned on" decoding="async">
       </div>
-      <div class="hero-status"><strong id="powerLabel">状态未知</strong><span id="modeLabel"> · 等待连接</span></div>
+      <div class="hero-status"><strong id="powerLabel">Unknown</strong><span id="modeLabel"> · Waiting for connection</span></div>
     </section>
 
     <div class="connect-row">
-      <button class="primary" id="connectButton">连接灯具</button>
+      <button class="primary" id="connectButton">Connect to Lamp</button>
     </div>
 
     <section class="card controls">
-      <div class="section-title"><h2>亮度</h2><span class="value"><span id="brightnessValue">—</span></span></div>
-      <input id="brightnessSlider" type="range" min="10" max="255" step="1" value="180" disabled aria-label="灯光亮度">
-      <div class="range-labels"><span>柔和 · 10</span><span>明亮 · 255</span></div>
+      <div class="section-title"><h2>Brightness</h2><span class="value"><span id="brightnessValue">—</span></span></div>
+      <input id="brightnessSlider" type="range" min="10" max="255" step="1" value="180" disabled aria-label="Lamp brightness">
+      <div class="range-labels"><span>Soft · 10</span><span>Bright · 255</span></div>
       <div class="mode-row">
-        <button class="mode-button" id="powerButton" disabled>打开灯</button>
-        <button class="mode-button" id="nightButton" disabled>☾ 夜间模式</button>
+        <button class="mode-button" id="powerButton" disabled>Turn Lamp On</button>
+        <button class="mode-button" id="nightButton" disabled>☾ Night Mode</button>
       </div>
     </section>
 
     <div class="info">
-      <strong>连接提示</strong><br>
-      请先在灯具附近连接设备。网页通过 BLE 直接控制灯具；亮度滑块在松手时发送设置。
+      <strong>Connection</strong><br>
+      Connect to your lamp nearby to control it over BLE. Release the brightness slider to send your setting.
     </div>
-    <div class="message" id="message" role="status" aria-live="polite">等待连接灯具。</div>
-    <footer>FoldLamp · 本地 BLE 控制</footer>
+    <div class="message" id="message" role="status" aria-live="polite">Waiting to connect to your lamp.</div>
+    <footer>Free Slope Lamp · BLE CONTROL</footer>
   </main>
 
   <script>
@@ -145,9 +154,9 @@
     }
 
     function setConnected(connected) {
-      connectionText.textContent = connected ? "已连接" : "未连接";
+      connectionText.textContent = connected ? "Connected" : "Disconnected";
       connectionDot.classList.toggle("connected", connected);
-      connectButton.textContent = connected ? "断开连接" : "连接灯具";
+      connectButton.textContent = connected ? "Disconnect" : "Connect to Lamp";
       powerButton.disabled = !connected || lampState.on === null;
       nightButton.disabled = !connected || lampState.on === null;
       brightnessSlider.disabled = !connected || lampState.on !== true;
@@ -155,18 +164,20 @@
 
     function renderState() {
       if (lampState.on === null) {
-        powerLabel.textContent = "状态未知";
-        modeLabel.textContent = " · 等待设备状态";
-        powerButton.textContent = "打开灯";
+        document.body.classList.remove("lamp-on");
+        powerLabel.textContent = "Unknown";
+        modeLabel.textContent = " · Waiting for device status";
+        powerButton.textContent = "Turn Lamp On";
         lampIllustration.classList.add("off");
         lampIllustration.classList.remove("on");
         setConnected(Boolean(server && server.connected));
         return;
       }
 
-      powerLabel.textContent = lampState.on ? "灯已打开" : "灯已关闭";
-      modeLabel.textContent = lampState.night ? " · 夜间模式" : " · 正常模式";
-      powerButton.textContent = lampState.on ? "关闭灯" : "打开灯";
+      powerLabel.textContent = lampState.on ? "Lamp On" : "Lamp Off";
+      document.body.classList.toggle("lamp-on", lampState.on);
+      modeLabel.textContent = lampState.night ? " · Night Mode" : " · Normal Mode";
+      powerButton.textContent = lampState.on ? "Turn Lamp Off" : "Turn Lamp On";
       nightButton.classList.toggle("active", lampState.night);
       lampIllustration.classList.toggle("on", lampState.on);
       lampIllustration.classList.toggle("off", !lampState.on);
@@ -206,30 +217,30 @@
       if (!text) return;
       if (text.startsWith("STATE=")) {
         parseStatus(text);
-        setMessage("灯具状态已同步。", "success");
+        setMessage("Lamp status synced.", "success");
       } else if (text.startsWith("ERR:")) {
-        setMessage(`灯具返回：${text}`, "error");
+        setMessage(`Lamp response: ${text}`, "error");
       } else {
-        setMessage(`灯具返回：${text}`, "success");
+        setMessage(`Lamp response: ${text}`, "success");
       }
     }
 
     async function connectLamp() {
       if (!navigator.bluetooth) {
-        setMessage("此浏览器没有 Web Bluetooth。请用支持 BLE 网页连接的浏览器，或告诉我手机系统。", "error");
+        setMessage("Web Bluetooth is unavailable in this browser. Open this page in a browser that supports BLE connections.", "error");
         return;
       }
 
       try {
         connectButton.disabled = true;
-        setMessage("正在搜索 FoldLamp-C3…");
+        setMessage("Searching for FoldLamp-C3…");
         device = await navigator.bluetooth.requestDevice({
           filters: [{ name: "FoldLamp-C3" }],
           optionalServices: [SERVICE_UUID]
         });
         device.addEventListener("gattserverdisconnected", onDisconnected);
 
-        setMessage("正在连接并读取灯具服务…");
+        setMessage("Connecting and reading lamp services…");
         server = await device.gatt.connect();
         const service = await server.getPrimaryService(SERVICE_UUID);
         rxCharacteristic = await service.getCharacteristic(RX_UUID);
@@ -239,7 +250,7 @@
         await txCharacteristic.startNotifications();
 
         setConnected(true);
-        setMessage("已连接。正在同步灯具状态…", "success");
+        setMessage("Connected. Syncing lamp status…", "success");
 
         // TX is readable, so this also recovers the state if the first
         // connection notification arrived before subscription completed.
@@ -251,9 +262,9 @@
         }
       } catch (error) {
         if (error.name !== "NotFoundError") {
-          setMessage(`连接失败：${error.message || error}`, "error");
+          setMessage(`Connection failed: ${error.message || error}`, "error");
         } else {
-          setMessage("已取消设备选择。", "");
+          setMessage("Device selection canceled.", "");
         }
         if (device && device.gatt && !device.gatt.connected) setConnected(false);
       } finally {
@@ -267,12 +278,12 @@
       txCharacteristic = null;
       lampState = { on: null, brightness: null, night: false };
       renderState();
-      setMessage("连接已断开。重新连接后可继续控制。", "error");
+      setMessage("Connection lost. Reconnect to continue controlling the lamp.", "error");
     }
 
     function sendCommand(command) {
       if (!rxCharacteristic || !server || !server.connected) {
-        setMessage("请先连接灯具。", "error");
+        setMessage("Connect to the lamp first.", "error");
         return Promise.resolve();
       }
 
@@ -283,9 +294,9 @@
         } else {
           await rxCharacteristic.writeValue(data);
         }
-        setMessage(`已发送：${command}，等待灯具状态回报…`, "success");
+        setMessage(`Sent ${command}. Waiting for lamp status…`, "success");
       }).catch(error => {
-        setMessage(`发送失败：${error.message || error}`, "error");
+        setMessage(`Send failed: ${error.message || error}`, "error");
       });
 
       return writeQueue;
@@ -313,7 +324,7 @@
 
     brightnessSlider.addEventListener("change", () => {
       if (lampState.on !== true) {
-        setMessage("请先打开灯，再调整亮度。", "error");
+        setMessage("Turn the lamp on before adjusting brightness.", "error");
         return;
       }
       sendCommand(`BRIGHTNESS=${brightnessSlider.value}`);
